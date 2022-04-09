@@ -1,6 +1,8 @@
 # Kueche
 Kueche is a media player for Raspery-Pis with touchscreen. It is based on the Lcars interface known from StarTreck(tm).
 
+<img src="pictures/dash.png" alt="Dashboard" width="400">
+
 The following is thus possible:
   * Listen to various internet radio stations.
   * Select and play music files on a data medium
@@ -48,6 +50,22 @@ cd kueche
 pip install -r requirements.txt
 python3 kueche.py
 ```
+
+
+## Configuration
+
+Please create a config.ini as follows. Then you can adjust the values in the file according to your needs:
+```
+cp config.ini_skeleton config.ini
+```
+
+### Sounds and fonts
+For copyright reasons, the fonts and sounds folders are empty. However, there are many sound effects from the movies available on the internet that you can use.
+You can also find beautiful fonts that match the movies.
+
+### Calendar
+If you want to use the Google calendar you have to get an oauth2 client_id for your account there.
+Then your appointments can be displayed with the calendar_id.
 
 ## Development
 

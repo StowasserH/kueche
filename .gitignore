@@ -105,6 +105,11 @@ background
 
 # No Fonts, because copyright
 *.ttf
+*.TTF
 
 # No Sounds, because copyright
 *.wav
+
+config.ini
+selected_stations
+currenttitle
