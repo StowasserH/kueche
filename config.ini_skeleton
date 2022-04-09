@@ -1,0 +1,17 @@
+[radio]
+file = ~/currenttitle
+
+[gui]
+fullscreen = false
+
+[sound]
+beeps = true
+
+[kalender]
+// get client_id for https://www.googleapis.com/oauth2/v1/certs
+secret= /path/to/your/google/client_id.json
+calendar_id=_calenderid_@group.calendar.google.com
+timezone= Europe/Berlin
+
+[media]
+path=/path/to/your/music
