@@ -43,7 +43,6 @@ pip3 install --upgrade pip setuptools wheel
 git clone https://github.com/StowasserH/kueche.git
 git clone https://github.com/StowasserH/pylcars.git
 cd pylcars
-pip3 install -r requirements.txt
 pip3 install -e .
 cd ..
 cd kueche
