@@ -34,6 +34,11 @@ class Radio(Observable, UserPanel):
         self.radio_is_on = True
         self.update_observers()
 
+    def play_file(self, path: str):
+        self.player.play(path)
+        self.radio_is_on = True
+        self.update_observers()
+
     def stop_radio(self):
         self.title_lable.setText("No Radio")
         self.player.stop()
@@ -69,12 +74,10 @@ class Radio(Observable, UserPanel):
 
         self.init_radio_list()
         self.load_selected_stations()
-        self.scroller = QtWidgets.QSlider(lcars_app)
-        self.scroller.setOrientation(QtCore.Qt.Vertical)
-        self.scroller.setGeometry(QtCore.QRect(500, 42, 510, 380))
+        self.scroller = pylcars.Slider(lcars_app, QtCore.QRect(740, 40, 40, 400), QtCore.Qt.Vertical)
+        self.scroller.setInvertedAppearance(True)
         self.scroller.setMinimum(0)
         self.scroller.setMaximum(len(self.all_radios) - self.len_lines)
-
         self.scroller.setValue(self.current_offset)
         self.scroller.valueChanged.connect(self.scroller_value_changed)
 

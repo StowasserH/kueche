@@ -27,9 +27,7 @@ class Dashboard(Observer, UserPanel):
         self.radio_button.up.clicked.connect(self.onRadioUp)
         self.radio_button.start.clicked.connect(self.onRadioStart)
 
-        self.loudness = QtWidgets.QSlider(lcars_app)
-        self.loudness.setOrientation(QtCore.Qt.Horizontal)
-        self.loudness.setGeometry(QtCore.QRect(458, 42, 300, 40))
+        self.loudness = pylcars.Slider(lcars_app, QtCore.QRect(458, 42, 300, 40))
         self.loudness.setMinimum(0)
         self.loudness.setMaximum(100)
 
@@ -52,7 +50,9 @@ class Dashboard(Observer, UserPanel):
                 sys.stderr.write("  " + mixer + "\n")
             sys.exit(1)
         vol = self.alsa_mixer.getvolume()
-        back = self.getexp(int(vol[0]))
+        back = self.getexp(vol[0])
+        print(str(vol) + " " + str(back))
+        # back = int(vol[0])
         self.loudness.setValue(back)
         self.loudness.valueChanged.connect(self.loudness_valueChanged)
 
@@ -107,8 +107,16 @@ class Dashboard(Observer, UserPanel):
 
         datum = pylcars.Textline(lcars_app, QtCore.QRect(140, 415, 220, 32), pylcars.Conditions.info, 22)
         datum.setText("00.00.2000")
+
         self.this_panel['uhr'] = uhr
         self.this_panel['datum'] = datum
+
+        loudness_out = pylcars.Textline(lcars_app, QtCore.QRect(140, 250, 220, 32), pylcars.Conditions.info, 22)
+        self.this_panel['loudness_out'] = loudness_out
+        loudness_out.hide()
+        self.lcars_app.loudness_out_timer = QtCore.QTimer(self.lcars_app)
+        self.lcars_app.loudness_out_timer.timeout.connect(self.loudness_out_hide)
+        self.lcars_app.loudness_out_timer.setSingleShot(True)
 
         self.lcars_app.uhr_timer = QtCore.QTimer(self.lcars_app)
         self.lcars_app.uhr_timer.timeout.connect(self.update_uhr)
@@ -164,15 +172,35 @@ class Dashboard(Observer, UserPanel):
     #    return int(np.exp2(log / 15))
 
     def getlog(self, vol):
-        # factor=100/np.log2(101)
-        return int(np.log2(1 + vol) * 15.0190483224)
+        # r=np.e
+        # +r=2.6
+        # out = int(np.rint((np.power(vol, r) / (r * 1000))))
+        # if out > 100:
+        #    out = 100
+        return vol
 
     def getexp(self, log):
-        return int(np.exp2(log / 15.0190483224))
+        # r=np.e
+        # r=2.6
+        return log
+        # int(np.rint(np.power(log, 1 / r) * 50 / r))
 
     def loudness_valueChanged(self, vol):
         log = self.getlog(vol)
         self.alsa_mixer.setvolume(log)
+        outp: pylcars.Textline = self.this_panel['loudness_out']
+        outp.setText(str(log))
+        # outp.move(QtCore.QPoint(458 + vol, 32))
+        outp.show()
+        self.lcars_app.loudness_out_timer.timeout.connect(self.loudness_out_hide)
+        self.lcars_app.loudness_out_timer.start(1000)
+        print(str(vol) + " " + str(log))
+
+    def loudness_out_hide(self):
+        self.this_panel['loudness_out'].hide()
+
+    def activate(self):
+        self.this_panel['loudness_out'].hide()
 
     def onRadioDown(self):
         self.lcars_app.sound('Sounds/computerbeep_15.wav')

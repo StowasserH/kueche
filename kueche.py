@@ -90,11 +90,10 @@ class LcarsApp(pylcars.Lcars):
         self.use_config()
         # self.qurrent_title_timer = QtCore.QTimer(self)
         fields = ('DASHBOARD', 'RADIO', 'KALENDER', 'CHEFFKOCH', 'MEDIA', 'EXIT')
-        self.menue = pylcars.Menue(self, fields, QtCore.QRect(0, 0, 800, 480), QtCore.QSize(130, 40),
-                                   button_callback=self.menu_click)
+        self.menue = pylcars.Menue(self, fields, QtCore.QRect(0, 0, 800, 480), QtCore.QSize(130, 40), button_callback=self.menu_click)
 
         self.dashboard = Dashboard(self, os.path.expanduser(self.config.get('radio', 'file')))
-        self.media = Media(self, os.path.expanduser(self.config.get('media', 'path')))
+        self.media = Media(self, os.path.expanduser(self.config.get('media', 'path')), self.dashboard.radio)
 
         self.alert = False
         self.init_exit()
