@@ -36,14 +36,13 @@ You need to install some software to create your own LCARS display.
 ```
 sudo apt-get update 
 sudo apt-get -y upgrade
-sudo apt-get install python3 python3-pip portaudio19-dev python3-dev python3-alsaaudio libmpv-dev qt5-default \
+sudo apt-get install python3 python3-pip portaudio19-dev python3-dev python3-alsaaudio libmpv-dev \
                      libpq-dev git build-essential libsasl2-dev libldap2-dev libssl-dev gcc \
-                     libxml2-dev libxmlsec1-dev pkg-config portaudio19-dev python3-qtpy
+                     libxml2-dev libxmlsec1-dev pkg-config portaudio19-dev python3-qtpy qtbase5-dev
 pip3 install --upgrade pip setuptools wheel
 git clone https://github.com/StowasserH/kueche.git
 git clone https://github.com/StowasserH/pylcars.git
 cd pylcars
-pip3 install -r requirements.txt
 pip3 install -e .
 cd ..
 cd kueche
