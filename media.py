@@ -81,8 +81,8 @@ class Media(UserPanel):
             line_nr = line_nr + 1
         for f in os.listdir(path):
             self.actual_files.append(f)
-            line = self.lines[line_nr][0]
             if line_nr < self.len_lines:
+                line = self.lines[line_nr][0]
                 line.setText("[ ]" + f)
                 line.mousePressEvent = partial(self.on_click, offset, os.path.join(path, f))
             line_nr = line_nr + 1
