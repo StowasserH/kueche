@@ -23,6 +23,7 @@ folder_svg = """
 class Media(UserPanel):
     def __init__(self, lcars_app, nas_folder, radio: Radio):
         UserPanel.__init__(self, 'MEDIA', lcars_app.menue.pages)
+        self.active = False
         self.actual_path = None
         self.lines = None
         self.len_lines = 16
@@ -47,12 +48,19 @@ class Media(UserPanel):
         print(offset)
         self.show_files(offset)
 
+    def activate(self):
+        self.active = True
+
+    def deactivate(self):
+        self.active = False
+
     def show_scroller(self):
         if len(self.actual_files) <= self.len_lines:
             self.scroller.hide()
         else:
             self.scroller.setMaximum(len(self.actual_files) - self.len_lines)
-            self.scroller.show()
+            if self.active:
+                self.scroller.show()
 
     def show_files(self, offset):
         line_nr = 0
@@ -79,7 +87,8 @@ class Media(UserPanel):
             line.setText("[ ] ..")
             line.mousePressEvent = partial(self.on_click, offset, os.path.split(path)[0])
             line_nr = line_nr + 1
-        for f in os.listdir(path):
+        files = os.listdir(path)
+        for f in sorted(files):
             self.actual_files.append(f)
             if line_nr < self.len_lines:
                 line = self.lines[line_nr][0]
@@ -90,7 +99,7 @@ class Media(UserPanel):
         if line_nr < self.len_lines:
             for y in range(line_nr, self.len_lines):
                 self.lines[y][0].setText("")
-        self.show_scroller()
+        # self.show_scroller()
 
     def on_click(self, offset, index, QMouseEvent):
         # print(index)
