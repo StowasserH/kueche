@@ -156,8 +156,10 @@ class Dashboard(Observer, UserPanel):
                 startstr = start_dt.strftime('%d.%m - %H:%M')
                 if start_dt.day == datetime.date.today().day and start_dt.month == datetime.date.today().month:
                     self.kalender_lines_lable[line].change_color(pylcars.Conditions.alert)
-
-                self.kalender_lines_lable[line].setText(startstr + " " + event['summary'])
+                if 'summary' in event:
+                    self.kalender_lines_lable[line].setText(startstr + " " + event['summary'])
+                else:
+                    self.kalender_lines_lable[line].setText(startstr + " -")
 
     def update(self, *args, **kwargs):
         self.current_title_lable = self.radio.current_title
