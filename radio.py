@@ -107,7 +107,10 @@ class Radio(Observable, UserPanel):
 
     def init_radio_list(self):
         # read radios
-        txt_list = Path('radio_stations/metalRadios').read_text()
+        txt_list = ""
+        for filename in os.scandir('radio_stations'):
+            if filename.is_file() and "Radios" in filename.path:
+                txt_list = txt_list + "\n" + Path(filename).read_text()
         flops = txt_list.split("\n")
         # flops.pop()
         while flops:
