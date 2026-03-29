@@ -1,13 +1,20 @@
 # Kueche
-Kueche is a media player for Raspery-Pis with touchscreen. It is based on the Lcars interface known from StarTreck(tm).
+Kueche is a media player for Raspberry-Pis with touchscreen. It is based on the LCARS interface known from Star Trek (TM).
 
 <img src="pictures/dash.png" alt="Dashboard" width="400">
 
-The following is thus possible:
-  * Listen to various internet radio stations.
-  * Select and play music files on a data medium
+## Features
 
-The name Kueche comes from the German word 'Küche' as this radio is operated by being in my kitchen.
+* **Internet Radio** - Listen to various internet radio stations
+* **Local Music Player** - Select and play music files with an intuitive file browser
+* **Playlist Manager** - Build, save, and load multiple playlists with shuffle mode
+* **Google Calendar Integration** - Display upcoming calendar events with date grouping
+* **LCARS UI** - Retro-futuristic interface inspired by Star Trek: The Next Generation
+* **Touch-Friendly** - Optimized for Raspberry Pi with touchscreen (with virtual keyboard for input)
+* **Plugin Architecture** - Modular plugin system with dependency injection for easy extension
+* **Debug Logging** - Configurable file and console logging for troubleshooting
+
+The name Kueche comes from the German word 'Küche' (kitchen) as this radio is operated in my kitchen.
 
 ## Getting Started
 
@@ -65,18 +72,57 @@ python3 -m kueche
 
 ## Configuration
 
-Please create a config.ini as follows. Then you can adjust the values in the file according to your needs:
-```
+Create a config.ini from the skeleton template:
+```bash
 cp config.ini_skeleton config.ini
 ```
 
-### Sounds and fonts
-For copyright reasons, the fonts and sounds folders are empty. However, there are many sound effects from the movies available on the internet that you can use.
-You can also find beautiful fonts that match the movies.
+Then edit `config.ini` to match your setup.
 
-### Calendar
-If you want to use the Google calendar you have to get an oauth2 client_id for your account there.
-Then your appointments can be displayed with the calendar_id.
+### Plugins
+
+Kueche uses a modular plugin architecture. The following plugins are available:
+
+* **Dashboard** - Main view with clock, radio controls, and volume slider
+* **Radio** - Internet radio station player
+* **Media** - File browser for local music with playlist integration
+* **Playlist** - Build and manage multiple playlists (saves to `playlists/` directory)
+* **Kalender** - Google Calendar integration with event display
+
+Enable/disable plugins in the `[plugins]` section of `config.ini`.
+
+### Media & Playlists
+
+* **Media Browser**: Select folders and files to add to playlists
+* **Playlist Management**: Save/load multiple playlists, toggle shuffle mode
+* **Playlist Storage**: Each playlist is saved as a separate JSON file in the `playlists/` directory
+* **Playback**: Play entire playlists via the radio player with auto-advance
+
+### Sounds and Fonts
+
+For copyright reasons, the fonts and sounds folders are empty. However, there are many sound effects from the Star Trek movies available online that you can use. You can also find beautiful fonts that match the LCARS design.
+
+### Google Calendar Integration
+
+To use the Google Calendar feature:
+
+1. Get an OAuth2 `client_id.json` from [Google Cloud Console](https://console.cloud.google.com/)
+2. Save it to the path specified in `[plugin.kalender]` section of `config.ini`
+3. Set your Google Calendar ID in the config
+4. The calendar will display upcoming events grouped by date with weekday names
+
+### Debug Logging
+
+Enable debug logging in the `[debug]` section of `config.ini`:
+```ini
+[debug]
+enabled = true
+level = DEBUG
+file = ~/.kueche_debug.log
+console = true
+```
+
+This will log application events to both console and file for troubleshooting.
 
 ## Development
 
