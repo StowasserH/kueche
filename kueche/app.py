@@ -45,9 +45,11 @@ class LcarsApp(pylcars.Lcars):
         exit(0)
 
     def closeEvent(self, event):
-        if self.dashboard.radio.radio_is_on:
-            self.dashboard.radio.stop_radio()
-            # self.dashboard.radio_is_on = False
+        """Stop radio playback on app close"""
+        radio_plugin = self.plugins.get('radio') if self.plugins else None
+        if radio_plugin and hasattr(radio_plugin, 'radio') and radio_plugin.radio:
+            if radio_plugin.radio.radio_is_on:
+                radio_plugin.radio.stop_radio()
         super(pylcars.Lcars, self).closeEvent(event)
 
     def exit_to_shutdown(self):
