@@ -90,7 +90,8 @@ class LcarsApp(pylcars.Lcars):
 
             config.add_section('plugin.kalender')
             config.set('plugin.kalender', 'secret', os.path.expanduser('~/.keys/client_id.json'))
-            config.set('plugin.kalender', 'calendar_id', '')
+            # Note: User must set calendar_id manually in config
+            config.set('plugin.kalender', 'calendar_id', 'YOUR_CALENDAR_ID_HERE')
             config.set('plugin.kalender', 'timezone', 'Europe/Berlin')
 
             # Legacy sections (for backward compatibility)
@@ -99,7 +100,7 @@ class LcarsApp(pylcars.Lcars):
 
             config.add_section('kalender')
             config.set('kalender', 'secret', os.path.expanduser('~/.keys/client_id.json'))
-            config.set('kalender', 'calendar_id', '')
+            config.set('kalender', 'calendar_id', 'YOUR_CALENDAR_ID_HERE')
             config.set('kalender', 'timezone', 'Europe/Berlin')
 
             config.add_section('media')
