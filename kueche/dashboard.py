@@ -20,10 +20,12 @@ from .userpanel import UserPanel
 
 
 class Dashboard(Observer, UserPanel):
-    def __init__(self, lcars_app, title_file):
+    def __init__(self, lcars_app, title_file, radio=None, kalender=None):
         UserPanel.__init__(self, 'DASHBOARD', lcars_app.menue.pages)
         self.title_file = title_file
         self.lcars_app = lcars_app
+        self.radio = radio
+        self.kalender = kalender
 
         self.radio_button = pylcars.Updown(lcars_app, QtCore.QRect(154, 42, 300, 40))
         self.this_panel['radio'] = self.radio_button
@@ -70,10 +72,15 @@ class Dashboard(Observer, UserPanel):
                                                     33)
         self.current_title_lable.setText("Select Radio Realis-Station")
         self.this_panel['current_title_lable'] = self.current_title_lable
-        self.radio = Radio(lcars_app, self.title_file, self.current_title_lable)
-        self.active_radio = list(self.radio.selected_stations.keys())[0]
-        self.radio_button.start.setText(self.active_radio + " ")
-        self.radio.register(self)
+
+        # Only create Radio if not injected
+        if self.radio is None:
+            self.radio = Radio(lcars_app, self.title_file, self.current_title_lable)
+
+        if self.radio:
+            self.active_radio = list(self.radio.selected_stations.keys())[0]
+            self.radio_button.start.setText(self.active_radio + " ")
+            self.radio.register(self)
 
         self.kalender_lines = 6
         self.kalender_lines_lable = {}
@@ -96,15 +103,19 @@ class Dashboard(Observer, UserPanel):
             self.this_panel['kalender_line_' + str(line)] = akt
             self.kalender_lines_lable[line] = akt
 
-        secret_file = lcars_app.config.get('kalender', 'secret')
+        # Setup calendar if not injected
+        if self.kalender is None:
+            secret_file = lcars_app.config.get('kalender', 'secret')
+            calendar_id = lcars_app.config.get('kalender', 'calendar_id')
+            self.kalender = Kalender(secret_file, calendar_id, lcars_app)
+
         self.timezoneLocal = pytz.timezone(lcars_app.config.get('kalender', 'timezone'))
         self.lcars_app.kalender_timer = QtCore.QTimer(self.lcars_app)
 
-        calendar_id = lcars_app.config.get('kalender', 'calendar_id')
-        self.kalender = Kalender(secret_file, calendar_id, lcars_app)
-        self.update_kalender()
-        self.lcars_app.kalender_timer.timeout.connect(self.update_kalender)
-        self.lcars_app.kalender_timer.start(60000)
+        if self.kalender:
+            self.update_kalender()
+            self.lcars_app.kalender_timer.timeout.connect(self.update_kalender)
+            self.lcars_app.kalender_timer.start(60000)
         self.uhrzeit = ""
         self.datum = ""
         uhr = pylcars.Textline(lcars_app, QtCore.QRect(140, 320, 220, 100), pylcars.Conditions.info, 66)
@@ -138,6 +149,9 @@ class Dashboard(Observer, UserPanel):
                 self.this_panel['datum'].setText(datum)
 
     def update_kalender(self):
+        if not self.kalender:
+            return
+
         try:
             events = self.kalender.get_events(self.kalender_lines)
         except Exception as e:

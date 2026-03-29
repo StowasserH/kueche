@@ -20,7 +20,7 @@ folder_svg = """
 
 
 class Media(UserPanel):
-    def __init__(self, lcars_app, nas_folder, radio: Radio):
+    def __init__(self, lcars_app, nas_folder, radio=None):
         UserPanel.__init__(self, 'MEDIA', lcars_app.menue.pages)
         self.active = False
         self.actual_path = None
@@ -101,7 +101,8 @@ class Media(UserPanel):
         if os.path.isdir(index):
             self.show_dir(offset, index)
         elif os.path.isfile(index):
-            self.radio.play_file(index)
+            if self.radio:
+                self.radio.play_file(index)
 
     def init_file_list(self):
         self.lines = []
