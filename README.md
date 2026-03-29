@@ -33,15 +33,13 @@ sudo apt-get install python3 python3-pip python3-dev portaudio19-dev libmpv-dev 
 
 ### Installation
 
-1. **Clone repositories**:
+1. **Clone the repository**:
 ```bash
 git clone https://github.com/StowasserH/kueche.git
-git clone https://github.com/StowasserH/pylcars.git
-
 cd kueche
 ```
 
-2. **Install dependencies**:
+2. **Install with dependencies**:
 ```bash
 # Create virtual environment (recommended)
 python3 -m venv .venv
@@ -50,10 +48,7 @@ source .venv/bin/activate
 # Upgrade pip, setuptools, wheel
 pip install --upgrade pip setuptools wheel
 
-# Install pylcars first
-pip install ../pylcars
-
-# Install kueche and dependencies
+# Install kueche with all dependencies (including pylcars)
 pip install -e .
 ```
 
