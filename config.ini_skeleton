@@ -1,17 +1,37 @@
-[radio]
-file = ~/currenttitle
+# Kueche Configuration
+# Plugin-based configuration system
+
+[plugins]
+# Enabled plugins (comma-separated, in load order)
+enabled = dashboard, radio, kalender, media
 
 [gui]
+# Display settings
 fullscreen = false
 
 [sound]
+# Audio feedback
 beeps = true
 
-[kalender]
-// get client_id for https://www.googleapis.com/oauth2/v1/certs
-secret= /path/to/your/google/client_id.json
-calendar_id=_calenderid_@group.calendar.google.com
-timezone= Europe/Berlin
+# Plugin-specific configuration sections
+# Each plugin reads its settings from [plugin.NAME]
 
-[media]
-path=/path/to/your/music
+[plugin.dashboard]
+# Dashboard clock and radio controls
+title_file = ~/currenttitle
+
+[plugin.radio]
+# Radio station player
+title_file = ~/currenttitle
+
+[plugin.media]
+# Music file browser
+path = /path/to/your/music
+
+[plugin.kalender]
+# Google Calendar integration
+# Get client_id.json from: https://console.cloud.google.com/
+# See README for setup instructions
+secret = /path/to/your/google/client_id.json
+calendar_id = YOUR_CALENDAR_ID@group.calendar.google.com
+timezone = Europe/Berlin
