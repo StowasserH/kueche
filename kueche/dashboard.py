@@ -105,11 +105,21 @@ class Dashboard(Observer, UserPanel):
 
         # Setup calendar if not injected
         if self.kalender is None:
-            secret_file = lcars_app.config.get('kalender', 'secret')
-            calendar_id = lcars_app.config.get('kalender', 'calendar_id')
+            # Try to get config from plugin.kalender section
+            section = 'plugin.kalender'
+            if not lcars_app.config.has_section(section):
+                section = 'kalender'  # Fallback to legacy section
+
+            secret_file = lcars_app.config.get(section, 'secret', fallback='')
+            calendar_id = lcars_app.config.get(section, 'calendar_id', fallback='')
             self.kalender = Kalender(secret_file, calendar_id, lcars_app)
 
-        self.timezoneLocal = pytz.timezone(lcars_app.config.get('kalender', 'timezone'))
+        # Get timezone from plugin.kalender section
+        section = 'plugin.kalender'
+        if not lcars_app.config.has_section(section):
+            section = 'kalender'
+        timezone_str = lcars_app.config.get(section, 'timezone', fallback='Europe/Berlin')
+        self.timezoneLocal = pytz.timezone(timezone_str)
         self.lcars_app.kalender_timer = QtCore.QTimer(self.lcars_app)
 
         if self.kalender:

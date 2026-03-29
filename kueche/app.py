@@ -96,18 +96,6 @@ class LcarsApp(pylcars.Lcars):
             config.set('plugin.kalender', 'calendar_id', 'YOUR_CALENDAR_ID_HERE')
             config.set('plugin.kalender', 'timezone', 'Europe/Berlin')
 
-            # Legacy sections (for backward compatibility)
-            config.add_section('radio')
-            config.set('radio', 'file', '~/currenttitle')
-
-            config.add_section('kalender')
-            config.set('kalender', 'secret', os.path.expanduser('~/.keys/client_id.json'))
-            config.set('kalender', 'calendar_id', 'YOUR_CALENDAR_ID_HERE')
-            config.set('kalender', 'timezone', 'Europe/Berlin')
-
-            config.add_section('media')
-            config.set('media', 'path', os.path.expanduser('~/Music/'))
-
             with open(configfile_name, 'w') as cfgfile:
                 config.write(cfgfile)
         self.config.read(configfile_name)
