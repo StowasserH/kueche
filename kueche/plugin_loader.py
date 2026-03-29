@@ -48,6 +48,7 @@ class PluginLoader:
                     plugin_file
                 )
                 module = importlib.util.module_from_spec(spec)
+                sys.modules[spec.name] = module
                 spec.loader.exec_module(module)
 
                 # Find Plugin subclass in module
@@ -80,32 +81,37 @@ class PluginLoader:
         Raises:
             ValueError: If circular dependency detected
         """
-        # Build dependency graph
-        graph = defaultdict(list)  # plugin → [dependencies]
-        in_degree = defaultdict(int)  # plugin → count of dependencies
+        # Build dependency graph and in-degree counts
+        # graph[dep] = list of plugins that depend on dep (reverse direction)
+        # in_degree[name] = count of dependencies that name has
+        graph = defaultdict(list)
+        in_degree = {}
 
+        # Initialize in_degree for all plugins
+        for name in plugin_names:
+            in_degree[name] = 0
+
+        # Count dependencies for each plugin and build reverse graph
         for name in plugin_names:
             if name not in self.plugin_classes:
                 sys.stderr.write(f"Plugin not found: {name}\n")
                 continue
 
             plugin_class = self.plugin_classes[name]
-            graph[name] = []  # Initialize if not exists
+            deps_count = 0
 
             for dep in plugin_class.dependencies:
                 if dep in plugin_names:
-                    graph[name].append(dep)
-                    in_degree[dep] = 0  # Will be updated below
+                    deps_count += 1
+                    # dep → plugins that depend on it
+                    graph[dep].append(name)
+                elif dep not in plugin_names:
+                    sys.stderr.write(f"Plugin {name} depends on {dep} which is not enabled\n")
 
-        # Count in-degrees (how many depend on each plugin)
-        for name in plugin_names:
-            in_degree[name] = 0
-
-        for name in plugin_names:
-            for dep in graph[name]:
-                in_degree[dep] += 1
+            in_degree[name] = deps_count
 
         # Topological sort (Kahn's algorithm)
+        # Start with plugins that have no dependencies
         queue = [name for name in plugin_names if in_degree[name] == 0]
         sorted_names = []
 
@@ -115,10 +121,11 @@ class PluginLoader:
             current = queue.pop(0)
             sorted_names.append(current)
 
-            for dep in graph[current]:
-                in_degree[dep] -= 1
-                if in_degree[dep] == 0:
-                    queue.append(dep)
+            # Process plugins that depend on current (now that current is loaded)
+            for dependent in graph[current]:
+                in_degree[dependent] -= 1
+                if in_degree[dependent] == 0:
+                    queue.append(dependent)
 
         if len(sorted_names) != len(plugin_names):
             sys.stderr.write("Circular dependency detected in plugins\n")

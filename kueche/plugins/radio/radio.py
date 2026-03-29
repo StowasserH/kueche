@@ -10,8 +10,8 @@ import ast
 
 from pylcars import Orientation
 
-from .observerable import Observable
-from .userpanel import UserPanel
+from kueche.observerable import Observable
+from kueche.userpanel import UserPanel
 
 
 def make_list(line):
@@ -26,7 +26,8 @@ class Radio(Observable, UserPanel):
     def show_current_title(self, title: str = "No Title"):
         if self.current_title != title:
             self.update_observers()
-            self.title_lable.setText(title)
+            if self.title_lable:
+                self.title_lable.setText(title)
             self.current_title = title
 
     def play_radio(self, url: str):
@@ -40,7 +41,8 @@ class Radio(Observable, UserPanel):
         self.update_observers()
 
     def stop_radio(self):
-        self.title_lable.setText("No Radio")
+        if self.title_lable:
+            self.title_lable.setText("No Radio")
         self.player.stop()
         self.radio_is_on = False
         self.update_observers()
@@ -51,7 +53,7 @@ class Radio(Observable, UserPanel):
             title = title.replace("icy-title:", "").strip()
             self.show_current_title(title)
 
-    def __init__(self, lcars_app, title_file, title_lable):
+    def __init__(self, lcars_app, title_file, title_lable=None):
         UserPanel.__init__(self, 'RADIO', lcars_app.menue.pages)
         Observable.__init__(self)
         self.old_station_hash: int = 0
@@ -73,6 +75,7 @@ class Radio(Observable, UserPanel):
 
         self.init_radio_list()
         self.load_selected_stations()
+        # Don't show stations here - wait until activate() is called
         self.scroller = pylcars.Slider(lcars_app, QtCore.QRect(740, 40, 40, 400), QtCore.Qt.Vertical)
         self.scroller.setInvertedAppearance(True)
         self.scroller.setMinimum(0)
@@ -130,41 +133,44 @@ class Radio(Observable, UserPanel):
                 pylcars.Semicircle(self.lcars_app, QtCore.QRect(140, 40 + (y * 25), 20, 20), "",
                                    pylcars.Conditions.active, Orientation.right)
             )
-            self.this_panel['line_' + str(y)] = self.lines[y]
-            self.this_panel['butt_' + str(y)] = self.select_boxes[y]
             self.lines[y].hide()
             self.select_boxes[y].hide()
-        self.show_stations(self.current_offset)
 
     def show_stations(self, offset):
         self.current_offset = offset
-        line = 0
-        for label, select_box in zip(self.lines, self.select_boxes):
-            station = self.all_radios[line + offset]
+        for idx, (label, select_box) in enumerate(zip(self.lines, self.select_boxes)):
+            abs_idx = idx + offset
+            select_box.hide()
+            if abs_idx >= len(self.all_radios):
+                label.setText("")
+                continue
+            station = self.all_radios[abs_idx]
             if len(station[1]) > 0:
                 label.setText(station[0])
-                if station[0] in self.selected_stations.keys():
+                label.show()
+                if station[0] in self.selected_stations:
                     select_box.show()
-                else:
-                    select_box.hide()
             else:
-                select_box.hide()
-                if station[0] == "***":
-                    label.setText("")
-                else:
-                    label.setText(station[0])
-            label.mousePressEvent = partial(self.on_click, line + offset)
-            line = line + 1
-
-        if line < self.len_lines:
-            for y in range(line, self.len_lines):
-                self.lines[y].setText("...")
+                label.setText("" if station[0] == "***" else station[0])
+                label.show()
+            label.mousePressEvent = partial(self.on_click, abs_idx)
 
     def activate(self):
+        for line in self.lines:
+            line.show()
         self.show_stations(self.current_offset)
+        self.scroller.show()
         self.old_station_hash = self.hash_stations()
 
     def deactivate(self):
+        # Hide all UI elements
+        for line in self.lines:
+            line.hide()
+        for select_box in self.select_boxes:
+            select_box.hide()
+        self.scroller.hide()
+
+        # Save if changed
         if self.old_station_hash != self.hash_stations():
             self.save_selected_stations()
 

@@ -1,4 +1,5 @@
 import sys
+import os
 from PyQt5 import QtCore
 
 import datetime
@@ -7,25 +8,26 @@ import pylcars
 import time
 import pytz
 
+from kueche.debug_logger import debug
+
 try:
     import alsaaudio
 except ImportError:
     alsaaudio = None
     sys.stderr.write("Warning: alsaaudio not available. Install with: pip install python3-alsaaudio\n")
 
-from .kalender import Kalender
-from .observer import Observer
-from .radio import Radio
-from .userpanel import UserPanel
+from kueche.observer import Observer
+from kueche.userpanel import UserPanel
 
 
 class Dashboard(Observer, UserPanel):
-    def __init__(self, lcars_app, title_file, radio=None, kalender=None):
+    def __init__(self, lcars_app, title_file, radio=None, kalender=None, playlist=None):
         UserPanel.__init__(self, 'DASHBOARD', lcars_app.menue.pages)
         self.title_file = title_file
         self.lcars_app = lcars_app
         self.radio = radio
         self.kalender = kalender
+        self.playlist = playlist
 
         self.radio_button = pylcars.Updown(lcars_app, QtCore.QRect(154, 42, 300, 40))
         self.this_panel['radio'] = self.radio_button
@@ -73,14 +75,23 @@ class Dashboard(Observer, UserPanel):
         self.current_title_lable.setText("Select Radio Realis-Station")
         self.this_panel['current_title_lable'] = self.current_title_lable
 
-        # Only create Radio if not injected
-        if self.radio is None:
-            self.radio = Radio(lcars_app, self.title_file, self.current_title_lable)
-
         if self.radio:
+            # Add Playlist as a radio option if playlist plugin is available
+            if self.playlist:
+                debug("DEBUG: Adding Playlist to selected_stations")
+                self.radio.selected_stations['Playlist'] = 'playlist://current'
+                debug("DEBUG: selected_stations now: {list(self.radio.selected_stations.keys())}")
+            else:
+                debug("DEBUG: No playlist plugin, skipping Playlist option")
+
             self.active_radio = list(self.radio.selected_stations.keys())[0]
             self.radio_button.start.setText(self.active_radio + " ")
             self.radio.register(self)
+
+            # Register playlist as observer if available
+            if self.playlist:
+                debug("DEBUG: Registering playlist as observer")
+                self.playlist.register(self)
 
         self.kalender_lines = 6
         self.kalender_lines_lable = {}
@@ -103,18 +114,7 @@ class Dashboard(Observer, UserPanel):
             self.this_panel['kalender_line_' + str(line)] = akt
             self.kalender_lines_lable[line] = akt
 
-        # Setup calendar if not injected
-        if self.kalender is None:
-            # Try to get config from plugin.kalender section
-            section = 'plugin.kalender'
-            if not lcars_app.config.has_section(section):
-                section = 'kalender'  # Fallback to legacy section
-
-            secret_file = lcars_app.config.get(section, 'secret', fallback='')
-            calendar_id = lcars_app.config.get(section, 'calendar_id', fallback='')
-            self.kalender = Kalender(secret_file, calendar_id, lcars_app)
-
-        # Get timezone from plugin.kalender section
+        # Get timezone from config
         section = 'plugin.kalender'
         if not lcars_app.config.has_section(section):
             section = 'kalender'
@@ -190,9 +190,42 @@ class Dashboard(Observer, UserPanel):
                     self.kalender_lines_lable[line].setText(startstr + " -")
 
     def update(self, *args, **kwargs):
-        self.current_title_lable = self.radio.current_title
-        if self.radio.radio_is_on != self.radio_button.start.toggle:
-            self.radio_button.start.tockle()
+        debug("DEBUG: Dashboard.update() called, active_radio={self.active_radio}")
+
+        # Check if playlist is playing - if so, switch to Playlist mode
+        if self.playlist and self.playlist.is_playing:
+            debug("DEBUG: Playlist is playing, switching active_radio to 'Playlist'")
+            self.active_radio = 'Playlist'
+            self.radio_button.start.setText(self.active_radio + " ")
+
+        if self.radio:
+            # Only show radio title if not in playlist mode
+            if self.active_radio != 'Playlist':
+                debug("DEBUG: Updating radio title: {self.radio.current_title}")
+                self.current_title_lable.setText(self.radio.current_title)
+            if self.radio.radio_is_on != self.radio_button.start.toggle:
+                self.radio_button.start.tockle()
+
+        if self.playlist and self.active_radio == 'Playlist':
+            debug("DEBUG: Updating playlist title, is_playing={self.playlist.is_playing}, index={self.playlist.current_song_index}")
+            # Update title from playlist
+            original_playlist = self.playlist.get_current_playlist()
+
+            # Use shuffled playlist if shuffle is enabled, otherwise use original
+            playlist_items = self.playlist.shuffled_playlist if (self.playlist.shuffle_enabled and self.playlist.shuffled_playlist) else original_playlist
+            debug("DEBUG: Using {'shuffled' if self.playlist.shuffle_enabled and self.playlist.shuffled_playlist else 'original'} playlist, has {len(playlist_items)} items")
+
+            if self.playlist.is_playing and playlist_items and 0 <= self.playlist.current_song_index < len(playlist_items):
+                song_path = playlist_items[self.playlist.current_song_index]
+                song_name = os.path.basename(song_path)
+                debug("DEBUG: Setting title to: Playlist: {song_name}")
+                self.current_title_lable.setText(f"Playlist: {song_name}")
+            else:
+                debug("DEBUG: Playlist not playing or no songs (is_playing={self.playlist.is_playing}, items={len(playlist_items)}, index={self.playlist.current_song_index})")
+                self.current_title_lable.setText("Playlist stopped")
+        else:
+            if self.active_radio != 'Playlist':
+                debug("DEBUG: Not playlist mode or no playlist (active_radio={self.active_radio}, has_playlist={self.playlist is not None})")
 
     def getlog(self, vol):
         return vol
@@ -221,6 +254,8 @@ class Dashboard(Observer, UserPanel):
         self.lcars_app.sound('Sounds/computerbeep_15.wav')
         self.radio_button.down.tickle(pylcars.Conditions.active)
         keyList = list(self.radio.selected_stations.keys())
+        debug("DEBUG: onRadioDown() keyList={keyList}, current={self.active_radio}")
+
         pos = 0
         last_idx = len(keyList) - 1
         for v in keyList:
@@ -232,21 +267,31 @@ class Dashboard(Observer, UserPanel):
                     self.active_radio = keyList[pos - 1]
                     break
             pos += 1
+        debug("DEBUG: onRadioDown() new active_radio={self.active_radio}")
         self.radio_button.start.setText(self.active_radio + " ")
 
     def onRadioStart(self):
+        debug("DEBUG: onRadioStart() active_radio={self.active_radio}, is_playlist={self.active_radio == 'Playlist'}, has_playlist={self.playlist is not None}")
+
         self.lcars_app.sound('Sounds/computerbeep_9.wav')
         self.radio_button.start.tockle(pylcars.Conditions.active)
         if self.radio.radio_is_on:
             self.radio.stop_radio()
         if self.radio_button.start.toggle:
-            url = self.radio.selected_stations[self.active_radio]
-            self.radio.play_radio(url)
+            if self.active_radio == 'Playlist' and self.playlist:
+                debug("DEBUG: Calling playlist.play_playlist()")
+                self.playlist.play_playlist()
+            else:
+                url = self.radio.selected_stations[self.active_radio]
+                debug("DEBUG: Playing radio: {self.active_radio} = {url}")
+                self.radio.play_radio(url)
 
     def onRadioUp(self):
         self.lcars_app.sound('Sounds/computerbeep_15.wav')
         self.radio_button.up.tickle(pylcars.Conditions.active)
         keyList = list(self.radio.selected_stations.keys())
+        debug("DEBUG: onRadioUp() keyList={keyList}, current={self.active_radio}")
+
         pos = 0
         last_idx = len(keyList) - 1
         for v in keyList:
@@ -258,4 +303,5 @@ class Dashboard(Observer, UserPanel):
                     self.active_radio = keyList[pos + 1]
                     break
             pos += 1
+        debug("DEBUG: onRadioUp() new active_radio={self.active_radio}")
         self.radio_button.start.setText(self.active_radio + " ")

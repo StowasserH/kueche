@@ -1,6 +1,6 @@
 """Media browser plugin for kueche"""
 from kueche.plugin import Plugin
-from kueche.media import Media
+from .media import Media
 import os
 
 
@@ -9,7 +9,7 @@ class MediaPlugin(Plugin):
 
     name = 'media'
     menu_label = 'MEDIA'
-    dependencies = ['radio']  # Requires radio for file playback
+    dependencies = ['radio', 'playlist']  # Requires radio for file playback and playlist for adding items
 
     def __init__(self, app, config_section=None):
         super().__init__(app, config_section)
@@ -34,8 +34,13 @@ class MediaPlugin(Plugin):
         radio_plugin = self.app.plugins.get('radio')
         radio = radio_plugin.radio if radio_plugin else None
 
+        # Get Playlist plugin for dependency injection (optional)
+        playlist_plugin = self.app.plugins.get('playlist')
+        playlist = playlist_plugin.playlist if playlist_plugin else None
+
         # Create Media instance
-        self.media = Media(self.app, media_path, radio=radio)
+        self.media = Media(self.app, media_path, radio=radio, playlist=playlist)
+        self.app.menue.pages[self.menu_label] = self.media.this_panel
 
     def activate(self):
         """Called when media panel is shown"""

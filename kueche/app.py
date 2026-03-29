@@ -9,6 +9,7 @@ import pylcars
 
 from .plugin_loader import PluginLoader
 from .userpanel import UserPanel
+from . import debug_logger
 
 
 class LcarsApp(pylcars.Lcars):
@@ -115,6 +116,10 @@ class LcarsApp(pylcars.Lcars):
         self.config = configparser.RawConfigParser()
         self.use_config()
 
+        # Initialize debug logger from config
+        debug_logger.init_logger(self.config)
+        debug_logger.debug("Kueche application started")
+
         # First pass: discover plugins and create menu
         self.plugin_loader = PluginLoader(self, self.config)
         self.plugin_loader.discover_plugins()
@@ -144,11 +149,12 @@ class LcarsApp(pylcars.Lcars):
             button_callback=self.menu_click
         )
 
+        # Store reference to plugins dict BEFORE instantiation so plugins can
+        # find each other via self.app.plugins during their initialize() calls
+        self.plugins = self.plugin_loader.plugins
+
         # Second pass: load and initialize plugins (now menu exists)
         self.plugin_loader.instantiate_plugins(enabled_plugins)
-
-        # Store reference to plugins dict
-        self.plugins = self.plugin_loader.plugins
 
         # Setup EXIT page
         self.init_exit()

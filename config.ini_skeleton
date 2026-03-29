@@ -2,8 +2,8 @@
 # Plugin-based configuration system
 
 [plugins]
-# Enabled plugins (comma-separated, in load order)
-enabled = dashboard, radio, kalender, media
+# Enabled plugins (comma-separated, dependencies are resolved automatically)
+enabled = dashboard, radio, kalender, playlist, media
 
 [gui]
 # Display settings
@@ -12,6 +12,13 @@ fullscreen = false
 [sound]
 # Audio feedback
 beeps = true
+
+[debug]
+# Debug logging configuration
+enabled = false
+level = DEBUG
+file = ~/.kueche_debug.log
+console = true
 
 # Plugin-specific configuration sections
 # Each plugin reads its settings from [plugin.NAME]
@@ -35,3 +42,9 @@ path = /path/to/your/music
 secret = /path/to/your/google/client_id.json
 calendar_id = YOUR_CALENDAR_ID@group.calendar.google.com
 timezone = Europe/Berlin
+
+[plugin.playlist]
+# Playlist manager and player
+# Build playlists from media files, play them via radio
+# Directory where individual playlist files are stored
+data_file = playlists

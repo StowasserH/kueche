@@ -13,7 +13,7 @@ except ImportError:
     GOOGLE_CALENDAR_AVAILABLE = False
     sys.stderr.write("Warning: Google Calendar support not available. Install with: pip install 'kueche[google-calendar]'\n")
 
-from .userpanel import UserPanel
+from kueche.userpanel import UserPanel
 
 
 class Kalender(UserPanel):

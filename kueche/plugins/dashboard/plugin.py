@@ -1,6 +1,6 @@
 """Dashboard plugin for kueche"""
 from kueche.plugin import Plugin
-from kueche.dashboard import Dashboard
+from .dashboard import Dashboard
 import os
 
 
@@ -9,7 +9,7 @@ class DashboardPlugin(Plugin):
 
     name = 'dashboard'
     menu_label = 'DASHBOARD'
-    dependencies = ['radio', 'kalender']  # Requires these plugins
+    dependencies = ['radio', 'kalender', 'playlist']  # Requires these plugins
 
     def __init__(self, app, config_section=None):
         super().__init__(app, config_section)
@@ -27,21 +27,24 @@ class DashboardPlugin(Plugin):
         # Get dependency plugins
         radio_plugin = self.app.plugins.get('radio')
         kalender_plugin = self.app.plugins.get('kalender')
+        playlist_plugin = self.app.plugins.get('playlist')
 
         radio = radio_plugin.radio if radio_plugin else None
         kalender = kalender_plugin.kalender if kalender_plugin else None
+        playlist = playlist_plugin.playlist if playlist_plugin else None
 
         # Create Dashboard instance with injected dependencies
         self.dashboard = Dashboard(
             self.app,
             title_file,
             radio=radio,
-            kalender=kalender
+            kalender=kalender,
+            playlist=playlist
         )
 
-        # Store title label on app for radio plugin to access
-        if hasattr(self.dashboard, 'current_title_lable'):
-            self.app.current_title_label = self.dashboard.current_title_lable
+        # Share title label with radio plugin for display updates
+        if hasattr(self.dashboard, 'current_title_lable') and radio_plugin and radio_plugin.radio:
+            radio_plugin.radio.title_lable = self.dashboard.current_title_lable
 
     def activate(self):
         """Called when dashboard is shown"""

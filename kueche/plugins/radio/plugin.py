@@ -1,6 +1,6 @@
 """Radio plugin for kueche"""
 from kueche.plugin import Plugin
-from kueche.radio import Radio
+from .radio import Radio
 from PyQt5 import QtCore
 
 
@@ -24,13 +24,8 @@ class RadioPlugin(Plugin):
         # Get config
         title_file = self.config.get('title_file', '~/currenttitle')
 
-        # Get title label from dashboard if available (for radio title updates)
-        # This will be set by dashboard plugin
-        if hasattr(self.app, 'current_title_label'):
-            self.title_label = self.app.current_title_label
-
-        # Create Radio instance
-        self.radio = Radio(self.app, title_file, self.title_label)
+        # Create Radio instance (title label will be set later by dashboard plugin)
+        self.radio = Radio(self.app, title_file, title_lable=None)
 
     def activate(self):
         """Called when radio panel is shown"""
