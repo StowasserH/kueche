@@ -1,0 +1,8 @@
+# Development dependencies
+# Install with: pip install -r requirements-dev.txt
+
+-e .[dev]
+
+# Optional: for building docs
+sphinx>=5.0
+sphinx-rtd-theme>=1.0

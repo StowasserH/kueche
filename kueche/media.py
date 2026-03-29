@@ -1,12 +1,11 @@
 import os
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets
 
 import pylcars
 from functools import partial
-from PyQt5 import QtCore, QtWidgets
 
-from radio import Radio
-from userpanel import UserPanel
+from .radio import Radio
+from .userpanel import UserPanel
 
 folder_svg = """
 <svg x="0px" y="0px" viewBox="0 0 309.267 309.267" style="enable-background:new 0 0 309.267 309.267;" xml:space="preserve">
@@ -45,7 +44,6 @@ class Media(UserPanel):
         self.init_file_list()
 
     def scroller_value_changed(self, offset):
-        print(offset)
         self.show_files(offset)
 
     def activate(self):
@@ -83,7 +81,6 @@ class Media(UserPanel):
         self.actual_path = path
         if os.path.normpath(path) != self.nas_folder:
             self.actual_files.append("..")
-            print(path + " - " + self.nas_folder)
             line.setText("[ ] ..")
             line.mousePressEvent = partial(self.on_click, offset, os.path.split(path)[0])
             line_nr = line_nr + 1
@@ -95,21 +92,16 @@ class Media(UserPanel):
                 line.setText("[ ]" + f)
                 line.mousePressEvent = partial(self.on_click, offset, os.path.join(path, f))
             line_nr = line_nr + 1
-            print("x:" + f + " - " + str(line_nr))
         if line_nr < self.len_lines:
             for y in range(line_nr, self.len_lines):
                 self.lines[y][0].setText("")
         # self.show_scroller()
 
     def on_click(self, offset, index, QMouseEvent):
-        # print(index)
-
         if os.path.isdir(index):
             self.show_dir(offset, index)
-        else:
-            if os.path.isfile(index):
-                #print("play " + index)
-                self.radio.play_file(index)
+        elif os.path.isfile(index):
+            self.radio.play_file(index)
 
     def init_file_list(self):
         self.lines = []
@@ -122,8 +114,7 @@ class Media(UserPanel):
             self.lines.append((line, deco1, deco2))
             self.this_panel['line_' + str(line_nr)] = line
             self.this_panel['deco1_' + str(line_nr)] = deco1
-            self.this_panel['deco2"_' + str(line_nr)] = deco2
-            # self.lines[y].setText("[ tesct]")
+            self.this_panel['deco2_' + str(line_nr)] = deco2
             line.hide()
             deco1.hide()
             deco2.hide()

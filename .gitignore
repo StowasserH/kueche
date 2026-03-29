@@ -100,8 +100,18 @@ ENV/
 # mypy
 .mypy_cache/
 
+# IDE
+.venv
+*.iml
+.idea/
+.idea_old/
+
+# Old Python files - migrated to package structure
+*.pyc
+
 #Generated pylcars backgrounds
 background
+background_old/
 
 # No Fonts, because copyright
 *.ttf
@@ -110,6 +120,14 @@ background
 # No Sounds, because copyright
 *.wav
 
+# Runtime files
 config.ini
 selected_stations
 currenttitle
+opt
+mp3s
+
+# Old build files
+Dockerfile
+setup.py
+.github

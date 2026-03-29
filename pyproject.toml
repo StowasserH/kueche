@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=65.5.1", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kueche"
+version = "0.1.0"
+description = "LCARS-based media player for Raspberry Pi with touchscreen"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [{name = "Harald Stowasser", email = "lcars@stowasser.tv"}]
+keywords = ["lcars", "qt", "gui", "media", "radio", "raspberry-pi"]
+dependencies = [
+    "PyQt5>=5.12",
+    "pylcars>=0.1.0",
+    "python-mpv>=0.5.0",
+    "python-dateutil>=2.8",
+    "pytz>=2021.1",
+    "numpy>=1.20",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Players",
+    "Topic :: Multimedia :: Sound/Audio :: Capture/Recording",
+]
+
+[project.optional-dependencies]
+google-calendar = [
+    "google-auth>=2.0",
+    "google-auth-oauthlib>=1.0",
+    "google-api-python-client>=2.50",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-qt>=4.0",
+    "flake8>=4.0",
+    "mypy>=1.0",
+    "black>=22.0",
+]
+
+[project.scripts]
+kueche = "kueche.app:main"
+
+[project.urls]
+Homepage = "https://github.com/StowasserH/kueche"
+Repository = "https://github.com/StowasserH/kueche.git"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kueche*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--strict-markers -v"
+markers = [
+    "gui: marks tests as requiring GUI components (deselect with '-m \"not gui\"')",
+]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.black]
+line-length = 100
+target-version = ['py38']
+
+[tool.flake8]
+max-line-length = 100
+exclude = [".git", "__pycache__", ".venv", "build", "dist", ".eggs"]

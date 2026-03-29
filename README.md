@@ -11,43 +11,55 @@ The name Kueche comes from the German word 'Küche' as this radio is operated by
 
 ## Getting Started
 
-At the current status, the project is probably still very difficult to put into operation yourself, as it is still in a very unfinished state.
-You should have some experience in Python.
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes..
+This project uses modern Python packaging with `pyproject.toml`. You'll need Python 3.8 or higher.
 
 ### Prerequisites
 
-You need to install some software to create your own LCARS display.
-  * Python 3.x
-  * PyQT5
-  * xxhash
-  * pyaudio
-  * python3-alsaaudio
-  * python3-qtpy
-  * libqt4-dev
-  * pylcars
-  * PyAudio
-  * python-mpv
-  * mpv
-
-### Installing 
-
-#### Debian based 
-```
-sudo apt-get update 
+On Debian/Ubuntu-based systems:
+```bash
+sudo apt-get update
 sudo apt-get -y upgrade
-sudo apt-get install python3 python3-pip portaudio19-dev python3-dev python3-alsaaudio libmpv-dev \
-                     libpq-dev git build-essential libsasl2-dev libldap2-dev libssl-dev gcc \
-                     libxml2-dev libxmlsec1-dev pkg-config portaudio19-dev python3-qtpy qtbase5-dev
-pip3 install --upgrade pip setuptools wheel
+sudo apt-get install python3 python3-pip python3-dev portaudio19-dev libmpv-dev \
+                     python3-alsaaudio git build-essential libsasl2-dev libldap2-dev \
+                     libssl-dev libxml2-dev libxmlsec1-dev pkg-config qtbase5-dev
+```
+
+### Installation
+
+1. **Clone repositories**:
+```bash
 git clone https://github.com/StowasserH/kueche.git
 git clone https://github.com/StowasserH/pylcars.git
-cd pylcars
-pip3 install -e .
-cd ..
+
 cd kueche
-pip install -r requirements.txt
-python3 kueche.py
+```
+
+2. **Install dependencies**:
+```bash
+# Create virtual environment (recommended)
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Upgrade pip, setuptools, wheel
+pip install --upgrade pip setuptools wheel
+
+# Install pylcars first
+pip install ../pylcars
+
+# Install kueche and dependencies
+pip install -e .
+```
+
+3. **Run the application**:
+```bash
+# Option 1: Using the run wrapper
+python3 run_kueche.py
+
+# Option 2: Using installed command
+kueche
+
+# Option 3: As a Python module
+python3 -m kueche
 ```
 
 

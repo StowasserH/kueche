@@ -1,10 +1,10 @@
-class Observable(object):
+class Observable:
 
     def __init__(self):
         self.observers = []
 
     def register(self, observer):
-        if not observer in self.observers:
+        if observer not in self.observers:
             self.observers.append(observer)
 
     def unregister(self, observer):
@@ -12,8 +12,7 @@ class Observable(object):
             self.observers.remove(observer)
 
     def unregister_all(self):
-        if self.observers:
-            del self.observers[:]
+        self.observers.clear()
 
     def update_observers(self, *args, **kwargs):
         for observer in self.observers:

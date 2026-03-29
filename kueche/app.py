@@ -7,9 +7,9 @@ import os
 import pylcars
 import sys
 
-from dashboard import Dashboard
-from media import Media
-from userpanel import UserPanel
+from .dashboard import Dashboard
+from .media import Media
+from .userpanel import UserPanel
 
 
 class LcarsApp(pylcars.Lcars):
@@ -49,35 +49,35 @@ class LcarsApp(pylcars.Lcars):
         super(pylcars.Lcars, self).closeEvent(event)
 
     def exit_to_shutdown(self):
-        subprocess.Popen("/bin/bash ~/bin/shutdown.sh", shell=True)
+        shutdown_script = os.path.expanduser("~/bin/shutdown.sh")
+        if os.path.exists(shutdown_script):
+            subprocess.run([shutdown_script], check=False)
         self.exit_desk.hide()
         self.exit_down.hide()
         self.shutdown.show()
         self.menue.setEnabled(False)
-        # exit(0)
 
     def use_config(self):
-        import os
         configfile_name = "config.ini"
         # Check if there is already a configuration file
         if not os.path.isfile(configfile_name):
             # Create the configuration file as it doesn't exist yet
-            cfgfile = open(configfile_name, 'w')
-            Config = configparser.ConfigParser.ConfigParser()
-            Config.add_section('radio')
-            Config.set('radio', 'file', '~/currenttitle')
-            Config.add_section('gui')
-            Config.set('gui', 'fullscreen', 'false')
-            Config.add_section('sound')
-            Config.set('sound', 'beeps', 'false')
-            Config.add_section('kalender')
-            Config.set('kalender', 'secret', '/home/pi/client_id.json')
-            Config.set('kalender', 'timezone', 'Europe/Berlin')
-            Config.add_section('nfs')
-            Config.set('media', 'path', '/home/stowasserh/Musik/')
+            config = configparser.ConfigParser()
+            config.add_section('radio')
+            config.set('radio', 'file', '~/currenttitle')
+            config.add_section('gui')
+            config.set('gui', 'fullscreen', 'false')
+            config.add_section('sound')
+            config.set('sound', 'beeps', 'false')
+            config.add_section('kalender')
+            config.set('kalender', 'secret', os.path.expanduser('~/.keys/client_id.json'))
+            config.set('kalender', 'calendar_id', '')
+            config.set('kalender', 'timezone', 'Europe/Berlin')
+            config.add_section('media')
+            config.set('media', 'path', os.path.expanduser('~/Music/'))
 
-            Config.write(cfgfile)
-            cfgfile.close()
+            with open(configfile_name, 'w') as cfgfile:
+                config.write(cfgfile)
         self.config.read(configfile_name)
 
     def __init__(self, parent=None):
@@ -101,7 +101,7 @@ class LcarsApp(pylcars.Lcars):
         if self.config.getboolean('gui', 'fullscreen'):
             self.showFullScreen()
         if self.config.getboolean('sound', 'beeps'):
-            self.setPlay_sound(self.config.getboolean('sound', 'beeps'))
+            self.set_play_sound(self.config.getboolean('sound', 'beeps'))
 
     def menu_click(self, button_name):
         if not self.menue.enabled:

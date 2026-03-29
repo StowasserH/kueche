@@ -1,7 +1,5 @@
-import alsaaudio
-import numpy as np
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore
 
 import datetime
 import dateutil.parser
@@ -9,10 +7,16 @@ import pylcars
 import time
 import pytz
 
-from kalender import Kalender
-from observer import Observer
-from radio import Radio
-from userpanel import UserPanel
+try:
+    import alsaaudio
+except ImportError:
+    alsaaudio = None
+    sys.stderr.write("Warning: alsaaudio not available. Install with: pip install python3-alsaaudio\n")
+
+from .kalender import Kalender
+from .observer import Observer
+from .radio import Radio
+from .userpanel import UserPanel
 
 
 class Dashboard(Observer, UserPanel):
@@ -31,29 +35,32 @@ class Dashboard(Observer, UserPanel):
         self.loudness.setMinimum(0)
         self.loudness.setMaximum(100)
 
-        try_mixer = ""
-        for mixer in alsaaudio.mixers():
-            sys.stderr.write("  " + mixer)
-            if mixer == "Master":
-                try_mixer = "Master"
-                break
-            if "Line" in mixer:
-                try_mixer = mixer
-            if "PCM" in mixer:
-                try_mixer = mixer
-                break
-        try:
-            self.alsa_mixer = alsaaudio.Mixer(try_mixer, 0)
-        except alsaaudio.ALSAAudioError:
-            sys.stderr.write("No such mixer\n")
+        self.alsa_mixer = None
+        if alsaaudio is not None:
+            try_mixer = ""
             for mixer in alsaaudio.mixers():
-                sys.stderr.write("  " + mixer + "\n")
-            sys.exit(1)
-        vol = self.alsa_mixer.getvolume()
-        back = self.getexp(vol[0])
-        print(str(vol) + " " + str(back))
-        # back = int(vol[0])
-        self.loudness.setValue(back)
+                sys.stderr.write("  " + mixer)
+                if mixer == "Master":
+                    try_mixer = "Master"
+                    break
+                if "Line" in mixer:
+                    try_mixer = mixer
+                if "PCM" in mixer:
+                    try_mixer = mixer
+                    break
+            try:
+                self.alsa_mixer = alsaaudio.Mixer(try_mixer, 0)
+            except alsaaudio.ALSAAudioError:
+                sys.stderr.write("No such mixer\n")
+                for mixer in alsaaudio.mixers():
+                    sys.stderr.write("  " + mixer + "\n")
+                sys.exit(1)
+            vol = self.alsa_mixer.getvolume()
+            back = self.getexp(vol[0])
+            self.loudness.setValue(back)
+        else:
+            sys.stderr.write("Warning: Audio mixer disabled (alsaaudio not available)\n")
+            self.loudness.setValue(50)
         self.loudness.valueChanged.connect(self.loudness_valueChanged)
 
         self.loudness.show()
@@ -81,8 +88,6 @@ class Dashboard(Observer, UserPanel):
                     '</svg>'
         self.split = pylcars.Separator(lcars_app, QtCore.QRect(140, 300, 600, 150), pylcars.Colors.rostbraun, 0,
                                        orientation=pylcars.Orientation.top, svg=svg_split)
-        #        '<circle cx="{h2}" cy="{h2}" r="{h2}" fill="{c}" />'
-        #        '<circle cx="{bar}" cy="{htot}" r="{h2}" fill="#000" />'
         self.this_panel['split'] = self.split
         for line in range(self.kalender_lines):
             akt = pylcars.Textline(
@@ -135,14 +140,13 @@ class Dashboard(Observer, UserPanel):
     def update_kalender(self):
         try:
             events = self.kalender.get_events(self.kalender_lines)
-        except:
-            print(sys.exc_info())
-            # self.lcars_app.kalender_timer.stop()
+        except Exception as e:
+            sys.stderr.write("Error updating calendar: {}\n".format(e))
             for line in range(self.kalender_lines):
                 self.kalender_lines_lable[line].setText("")
             self.kalender_lines_lable[0].setText("Kalender not readable")
-            self.kalender_lines_lable[1].setText(str(sys.exc_info()[0]))
-            self.kalender_lines_lable[2].setText(str(sys.exc_info()[1]))
+            self.kalender_lines_lable[1].setText(type(e).__name__)
+            self.kalender_lines_lable[2].setText(str(e))
             return
 
         for line in range(self.kalender_lines):
@@ -166,37 +170,22 @@ class Dashboard(Observer, UserPanel):
         if self.radio.radio_is_on != self.radio_button.start.toggle:
             self.radio_button.start.tockle()
 
-    # def getlog(self, vol):
-    #    if vol == 0:
-    #        return 0
-    #    return int(np.log2(vol) * 15)#
-    # def getexp(self, log):
-    #    return int(np.exp2(log / 15))
-
     def getlog(self, vol):
-        # r=np.e
-        # +r=2.6
-        # out = int(np.rint((np.power(vol, r) / (r * 1000))))
-        # if out > 100:
-        #    out = 100
         return vol
 
     def getexp(self, log):
-        # r=np.e
-        # r=2.6
         return log
-        # int(np.rint(np.power(log, 1 / r) * 50 / r))
 
     def loudness_valueChanged(self, vol):
         log = self.getlog(vol)
-        self.alsa_mixer.setvolume(log)
+        if self.alsa_mixer is not None:
+            self.alsa_mixer.setvolume(log)
         outp: pylcars.Textline = self.this_panel['loudness_out']
         outp.setText(str(log))
         # outp.move(QtCore.QPoint(458 + vol, 32))
         outp.show()
         self.lcars_app.loudness_out_timer.timeout.connect(self.loudness_out_hide)
         self.lcars_app.loudness_out_timer.start(1000)
-        print(str(vol) + " " + str(log))
 
     def loudness_out_hide(self):
         self.this_panel['loudness_out'].hide()
@@ -209,11 +198,11 @@ class Dashboard(Observer, UserPanel):
         self.radio_button.down.tickle(pylcars.Conditions.active)
         keyList = list(self.radio.selected_stations.keys())
         pos = 0
-        l = len(keyList) - 1
+        last_idx = len(keyList) - 1
         for v in keyList:
             if v == self.active_radio:
                 if v == keyList[0]:
-                    self.active_radio = keyList[l]
+                    self.active_radio = keyList[last_idx]
                     break
                 else:
                     self.active_radio = keyList[pos - 1]
@@ -235,10 +224,10 @@ class Dashboard(Observer, UserPanel):
         self.radio_button.up.tickle(pylcars.Conditions.active)
         keyList = list(self.radio.selected_stations.keys())
         pos = 0
-        l = len(keyList) - 1
+        last_idx = len(keyList) - 1
         for v in keyList:
             if v == self.active_radio:
-                if pos == l:
+                if pos == last_idx:
                     self.active_radio = keyList[0]
                     break
                 else:

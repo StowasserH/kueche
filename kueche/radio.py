@@ -1,17 +1,17 @@
 import locale
 import os
+from pathlib import Path
 
 import mpv
-from pathlib import Path
 import pylcars
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 from functools import partial
 import ast
 
 from pylcars import Orientation
 
-from observerable import Observable
-from userpanel import UserPanel
+from .observerable import Observable
+from .userpanel import UserPanel
 
 
 def make_list(line):
@@ -46,7 +46,6 @@ class Radio(Observable, UserPanel):
         self.update_observers()
 
     def mpv_log(self, loglevel, component, message):
-        print('[{}] {}: X{}X'.format(loglevel, component, message))
         if "icy-title" in message:
             title = str(message)
             title = title.replace("icy-title:", "").strip()
@@ -102,7 +101,6 @@ class Radio(Observable, UserPanel):
         return hash(frozenset(self.selected_stations.items()))
 
     def scroller_value_changed(self, offset):
-        print(offset)
         self.show_stations(offset)
 
     def init_radio_list(self):
@@ -172,7 +170,6 @@ class Radio(Observable, UserPanel):
 
     def on_click(self, index, QMouseEvent):
         station = self.all_radios[index]
-        print(str(index) + str(station))
         if station[0] in self.selected_stations.keys():
             self.selected_stations.pop(station[0])
         else:
